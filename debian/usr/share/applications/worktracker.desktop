@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Work Hour Tracker
+Comment=Track your daily working hours and breaks
+Exec=/usr/bin/worktracker
+Icon=worktracker
+Terminal=false
+Categories=Office;Utility;
+StartupNotify=true
+Keywords=work;time;tracker;productivity;

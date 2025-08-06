@@ -1,0 +1,18 @@
+Package: worktracker
+Version: 1.0.0
+Section: utils
+Priority: optional
+Architecture: all
+Depends: default-jre | openjdk-8-jre | openjdk-11-jre
+Maintainer: WorkTracker Team <worktracker@example.com>
+Description: Work Hour Tracker - Track daily working hours and breaks
+ A cross-platform Java desktop application for tracking daily working hours
+ and break sessions with system tray integration and detailed statistics.
+ .
+ Features:
+  - Track work sessions and breaks
+  - View daily and weekly statistics
+  - Historical data with detailed reports
+  - System tray integration
+  - Auto-start on system boot
+  - CSV data export

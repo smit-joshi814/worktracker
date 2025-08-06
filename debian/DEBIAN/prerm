@@ -1,0 +1,17 @@
+#!/bin/bash
+set -e
+
+# Stop any running instances
+pkill -f "WorkHourTracker.jar" 2>/dev/null || true
+
+# Remove autostart entries for all users
+for user_home in /home/*; do
+    if [ -d "$user_home" ]; then
+        autostart_file="$user_home/.config/autostart/worktracker.desktop"
+        if [ -f "$autostart_file" ]; then
+            rm -f "$autostart_file"
+        fi
+    fi
+done
+
+exit 0

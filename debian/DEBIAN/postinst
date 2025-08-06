@@ -1,0 +1,35 @@
+#!/bin/bash
+set -e
+
+# Create autostart directory for all users
+for user_home in /home/*; do
+    if [ -d "$user_home" ]; then
+        user=$(basename "$user_home")
+        autostart_dir="$user_home/.config/autostart"
+        
+        # Create autostart directory if it doesn't exist
+        if [ ! -d "$autostart_dir" ]; then
+            sudo -u "$user" mkdir -p "$autostart_dir" 2>/dev/null || true
+        fi
+        
+        # Create autostart entry
+        if [ -d "$autostart_dir" ]; then
+            sudo -u "$user" cat > "$autostart_dir/worktracker.desktop" << 'EOF'
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Work Hour Tracker
+Comment=Track your daily working hours and breaks
+Exec=/usr/bin/worktracker
+Icon=worktracker
+Terminal=false
+Categories=Office;Utility;
+StartupNotify=true
+Hidden=false
+X-GNOME-Autostart-enabled=true
+EOF
+        fi
+    fi
+done
+
+exit 0
