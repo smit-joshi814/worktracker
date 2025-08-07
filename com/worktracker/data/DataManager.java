@@ -22,22 +22,23 @@ public class DataManager {
     public void logSession(WorkSession session) {
         try {
             boolean fileExists = Files.exists(Paths.get(LOG_FILE));
-            FileWriter writer = new FileWriter(LOG_FILE, true);
+            
+            try (FileWriter writer = new FileWriter(LOG_FILE, true)) {
+                if (!fileExists) {
+                    writer.write("Date,Start Time,End Time,Total Work Time,Total Break Time,Break Sessions\n");
+                }
 
-            if (!fileExists) {
-                writer.write("Date,Start Time,End Time,Total Work Time,Total Break Time,Break Sessions\n");
+                String date = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                String startTime = session.getWorkStartTime().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+                String endTime = session.getWorkEndTime().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+                String workTime = TimeUtils.formatDuration(session.getTotalWorkSeconds());
+                String breakTime = TimeUtils.formatDuration(session.getTotalBreakSeconds());
+                String breaks = String.join("; ", session.getBreakSessions());
+
+                writer.write(String.format("%s,%s,%s,%s,%s,%s\n",
+                        date, startTime, endTime, workTime, breakTime, breaks));
+                writer.flush();
             }
-
-            String date = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-            String startTime = session.getWorkStartTime().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
-            String endTime = session.getWorkEndTime().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
-            String workTime = TimeUtils.formatDuration(session.getTotalWorkSeconds());
-            String breakTime = TimeUtils.formatDuration(session.getTotalBreakSeconds());
-            String breaks = String.join("; ", session.getBreakSessions());
-
-            writer.write(String.format("%s,%s,%s,%s,%s,\"%s\"\n",
-                    date, startTime, endTime, workTime, breakTime, breaks));
-            writer.close();
         } catch (IOException e) {
             throw new RuntimeException("Error saving log: " + e.getMessage());
         }
@@ -50,7 +51,7 @@ public class DataManager {
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(",", 6);
                 if (parts.length >= 5) {
-                    String breakSessions = parts.length > 5 ? parts[5].replace("\"", "") : "";
+                    String breakSessions = parts.length > 5 ? parts[5] : "";
                     // Add day name to date display
                     LocalDate date = LocalDate.parse(parts[0]);
                     String dateWithDay = TimeUtils.formatDateWithDay(date);

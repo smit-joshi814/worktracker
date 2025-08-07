@@ -71,6 +71,19 @@ public class WorkSession {
         return (System.currentTimeMillis() - currentSessionStart) / 1000;
     }
     
+    public void restoreState(State state, LocalTime startTime, long workSecs, long breakSecs, long elapsedSecs) {
+        this.currentState = state;
+        this.workStartTime = startTime;
+        this.totalWorkSeconds = workSecs;
+        this.totalBreakSeconds = breakSecs;
+        this.currentSessionStart = System.currentTimeMillis() - (elapsedSecs * 1000);
+        this.breakSessions.clear();
+    }
+    
+    public void addBreakSession(String breakSession) {
+        this.breakSessions.add(breakSession);
+    }
+    
     // Getters
     public State getCurrentState() { return currentState; }
     public LocalTime getWorkStartTime() { return workStartTime; }

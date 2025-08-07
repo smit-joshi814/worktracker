@@ -2,6 +2,7 @@ package com.worktracker;
 
 import com.worktracker.core.WorkSession;
 import com.worktracker.data.DataManager;
+import com.worktracker.data.SessionState;
 import com.worktracker.tray.SystemTrayManager;
 import com.worktracker.ui.HistoryViewer;
 import com.worktracker.ui.StatisticsViewer;
@@ -36,6 +37,12 @@ public class WorkHourTracker extends JFrame {
         initializeUI();
         setupSystemTray();
         startUITimer();
+        
+        // Restore previous session state if exists
+        if (SessionState.restoreState(session)) {
+            System.out.println("Previous session restored");
+        }
+        
         updateUI();
     }
     
@@ -50,9 +57,9 @@ public class WorkHourTracker extends JFrame {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
+                SessionState.saveState(session);
                 if (trayManager.isSupported()) {
                     setVisible(false);
-                    // trayManager.showMessage("Work Hour Tracker", "Application minimized to system tray");
                 } else {
                     System.exit(0);
                 }
@@ -60,6 +67,7 @@ public class WorkHourTracker extends JFrame {
             
             @Override
             public void windowIconified(WindowEvent e) {
+                SessionState.saveState(session);
                 if (trayManager.isSupported()) {
                     setVisible(false);
                 }
@@ -174,9 +182,11 @@ public class WorkHourTracker extends JFrame {
                         JOptionPane.YES_NO_OPTION);
                     if (result == JOptionPane.YES_OPTION) {
                         stopWork();
+                        SessionState.saveState(session);
                         System.exit(0);
                     }
                 } else {
+                    SessionState.saveState(session);
                     System.exit(0);
                 }
             }

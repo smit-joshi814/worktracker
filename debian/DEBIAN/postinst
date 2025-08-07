@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+# Stop running instances during update
+pkill -f "WorkHourTracker.jar" 2>/dev/null || true
+sleep 2
+
 # Create autostart directory for all users
 for user_home in /home/*; do
     if [ -d "$user_home" ]; then
