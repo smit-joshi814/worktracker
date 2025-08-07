@@ -90,7 +90,7 @@ public class DataManager {
     public long calculateWeeklyWorkHours() {
         LocalDate today = LocalDate.now();
         LocalDate monday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-        return calculateWorkHours(monday, today.minusDays(1));
+        return calculateWorkHours(monday, today);
     }
 
     public int countDailySessions(LocalDate date) {
