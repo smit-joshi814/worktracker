@@ -33,7 +33,7 @@ public class DataManager {
                 String endTime = session.getWorkEndTime().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
                 String workTime = TimeUtils.formatDuration(session.getTotalWorkSeconds());
                 String breakTime = TimeUtils.formatDuration(session.getTotalBreakSeconds());
-                String breaks = String.join("; ", session.getBreakSessions());
+                String breaks = session.getBreakSessions().isEmpty() ? "[]" : "[" + String.join("; ", session.getBreakSessions()) + "]";
 
                 writer.write(String.format("%s,%s,%s,%s,%s,%s\n",
                         date, startTime, endTime, workTime, breakTime, breaks));

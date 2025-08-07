@@ -26,6 +26,7 @@ public class WorkHourTracker extends JFrame {
     private JButton startWorkBtn, startBreakBtn, resumeWorkBtn, stopWorkBtn, historyBtn, statsBtn;
     private JLabel statusLabel, timeLabel, dailyLabel, weeklyLabel, dateLabel;
     private Timer uiTimer;
+
     
     public WorkHourTracker() {
         session = new WorkSession();
@@ -37,6 +38,19 @@ public class WorkHourTracker extends JFrame {
         initializeUI();
         setupSystemTray();
         startUITimer();
+        
+        // Add shutdown hook to save session on system shutdown (not during updates)
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            // Check if this is an update (state file exists) or system shutdown
+            if (!new java.io.File(".worktracker-state").exists() && session.getCurrentState() != WorkSession.State.IDLE) {
+                session.stopWork();
+                try {
+                    dataManager.logSession(session);
+                } catch (Exception e) {
+                    // Ignore errors during shutdown
+                }
+            }
+        }));
         
         // Restore previous session state if exists
         if (SessionState.restoreState(session)) {

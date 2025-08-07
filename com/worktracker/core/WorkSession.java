@@ -40,7 +40,7 @@ public class WorkSession {
         
         totalBreakSeconds += (System.currentTimeMillis() - currentSessionStart) / 1000;
         LocalTime breakEndTime = LocalTime.now();
-        breakSessions.add(String.format("[%s - %s]", 
+        breakSessions.add(String.format("%s - %s", 
             breakStartTime.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
             breakEndTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"))));
         
@@ -58,7 +58,7 @@ public class WorkSession {
         } else if (currentState == State.ON_BREAK) {
             totalBreakSeconds += (System.currentTimeMillis() - currentSessionStart) / 1000;
             LocalTime breakEndTime = LocalTime.now();
-            breakSessions.add(String.format("[%s - %s]", 
+            breakSessions.add(String.format("%s - %s", 
                 breakStartTime.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
                 breakEndTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"))));
         }
