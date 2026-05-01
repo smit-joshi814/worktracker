@@ -20,7 +20,7 @@ for user_home in /home/*; do
         if [ -d "$autostart_dir" ]; then
             sudo -u "$user" cat > "$autostart_dir/worktracker.desktop" << 'EOF'
 [Desktop Entry]
-Version=1.0
+Version=1.1.1
 Type=Application
 Name=Work Hour Tracker
 Comment=Track your daily working hours and breaks

@@ -137,4 +137,16 @@ public class DataManager {
 
         return stats;
     }
+
+    public long getSessionActiveWorkSeconds(WorkSession session) {
+        long activeSeconds = 0;
+        if (session != null) {
+            if (session.getCurrentState() == WorkSession.State.WORKING) {
+                activeSeconds = session.getTotalWorkSeconds() + session.getCurrentElapsedSeconds();
+            } else if (session.getCurrentState() != WorkSession.State.IDLE) {
+                activeSeconds = session.getTotalWorkSeconds();
+            }
+        }
+        return activeSeconds;
+    }
 }

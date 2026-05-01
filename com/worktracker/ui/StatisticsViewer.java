@@ -5,7 +5,9 @@ import com.worktracker.data.DataManager;
 import com.worktracker.utils.TimeUtils;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
@@ -21,64 +23,74 @@ public class StatisticsViewer {
     
     public void showStatistics(Component parent, WorkSession session) {
         JFrame statsFrame = new JFrame("Work Statistics");
-        statsFrame.setSize(650, 500);
+        statsFrame.setSize(750, 600);
         statsFrame.setLocationRelativeTo(parent);
         statsFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         
         JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        mainPanel.setBorder(new EmptyBorder(20, 25, 20, 25));
+        mainPanel.setBackground(new Color(248, 249, 250)); // Light Gray Theme
         
-        // Current session info
-        JPanel currentPanel = createCurrentSessionPanel(session);
+        JPanel topPanel = new JPanel(new BorderLayout(15, 15));
+        topPanel.setBackground(new Color(248, 249, 250));
+        topPanel.add(createCurrentSessionPanel(session), BorderLayout.CENTER);
         
-        // Weekly breakdown
-        JPanel weeklyPanel = createWeeklyBreakdownPanel(session);
-        
-        // Summary stats
-        JPanel summaryPanel = createSummaryPanel(session);
-        
-        mainPanel.add(currentPanel, BorderLayout.NORTH);
-        mainPanel.add(weeklyPanel, BorderLayout.CENTER);
-        mainPanel.add(summaryPanel, BorderLayout.SOUTH);
+        mainPanel.add(topPanel, BorderLayout.NORTH);
+        mainPanel.add(createWeeklyBreakdownPanel(session), BorderLayout.CENTER);
+        mainPanel.add(createSummaryPanel(session), BorderLayout.SOUTH);
         
         statsFrame.add(mainPanel);
         statsFrame.setVisible(true);
     }
     
+    private JPanel createStyledCard(String title, Component content) {
+        JPanel card = new JPanel(new BorderLayout(0, 10));
+        card.setBackground(Color.WHITE);
+        card.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(222, 226, 230), 1, true),
+            new EmptyBorder(15, 20, 15, 20)
+        ));
+        
+        JLabel titleLabel = new JLabel(title);
+        titleLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 16));
+        titleLabel.setForeground(new Color(73, 80, 87));
+        card.add(titleLabel, BorderLayout.NORTH);
+        card.add(content, BorderLayout.CENTER);
+        
+        return card;
+    }
+    
+    private void addStyledRow(JPanel panel, String labelText, String valueText) {
+        JLabel label = new JLabel(labelText);
+        label.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
+        label.setForeground(new Color(108, 117, 125));
+        
+        JLabel value = new JLabel(valueText);
+        value.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 14));
+        value.setForeground(new Color(33, 37, 41));
+        
+        panel.add(label);
+        panel.add(value);
+    }
+    
     private JPanel createCurrentSessionPanel(WorkSession session) {
-        JPanel currentPanel = new JPanel(new GridLayout(4, 2, 10, 5));
-        currentPanel.setBorder(BorderFactory.createTitledBorder("Current Session"));
+        JPanel grid = new JPanel(new GridLayout(2, 4, 15, 10));
+        grid.setBackground(Color.WHITE);
         
-        long todayWork = dataManager.calculateDailyWorkHours();
-        long weeklyWork = dataManager.calculateWeeklyWorkHours();
-        
-        if (session.getCurrentState() == WorkSession.State.WORKING) {
-            long currentElapsed = session.getCurrentElapsedSeconds();
-            todayWork += session.getTotalWorkSeconds() + currentElapsed;
-            weeklyWork += session.getTotalWorkSeconds() + currentElapsed;
-        } else if (session.getCurrentState() != WorkSession.State.IDLE) {
-            todayWork += session.getTotalWorkSeconds();
-            weeklyWork += session.getTotalWorkSeconds();
-        }
-        
+        long activeSeconds = dataManager.getSessionActiveWorkSeconds(session);
+        long todayWork = dataManager.calculateDailyWorkHours() + activeSeconds;
+        long weeklyWork = dataManager.calculateWeeklyWorkHours() + activeSeconds;
         LocalDate today = LocalDate.now();
         
-        currentPanel.add(new JLabel("Status:"));
-        currentPanel.add(new JLabel(session.getCurrentState().toString().replace("_", " ")));
-        currentPanel.add(new JLabel("Today (" + TimeUtils.getDayName(today) + "):"));
-        currentPanel.add(new JLabel(TimeUtils.formatDuration(todayWork)));
-        currentPanel.add(new JLabel("This Week Total:"));
-        currentPanel.add(new JLabel(TimeUtils.formatDuration(weeklyWork)));
-        currentPanel.add(new JLabel("Date:"));
-        currentPanel.add(new JLabel(TimeUtils.formatDateWithDay(today)));
+        addStyledRow(grid, "Status:", session.getCurrentState().toString().replace("_", " "));
+        addStyledRow(grid, "Date:", TimeUtils.formatDateWithDay(today));
+        addStyledRow(grid, "Today:", TimeUtils.formatDuration(todayWork));
+        addStyledRow(grid, "Week Total:", TimeUtils.formatDuration(weeklyWork));
         
-        return currentPanel;
+        return createStyledCard("Current Session", grid);
     }
     
     private JPanel createWeeklyBreakdownPanel(WorkSession session) {
-        JPanel weeklyPanel = new JPanel(new BorderLayout());
-        weeklyPanel.setBorder(BorderFactory.createTitledBorder("This Week's Breakdown"));
-        
         String[] weekColumns = {"Day", "Date", "Work Hours", "Sessions"};
         DefaultTableModel weekModel = new DefaultTableModel(weekColumns, 0) {
             @Override
@@ -96,12 +108,7 @@ public class StatisticsViewer {
             int sessions = dataManager.countDailySessions(day);
             
             if (day.equals(today)) {
-                if (session.getCurrentState() == WorkSession.State.WORKING) {
-                    long currentElapsed = session.getCurrentElapsedSeconds();
-                    dayWork += session.getTotalWorkSeconds() + currentElapsed;
-                } else if (session.getCurrentState() != WorkSession.State.IDLE) {
-                    dayWork += session.getTotalWorkSeconds();
-                }
+                dayWork += dataManager.getSessionActiveWorkSeconds(session);
                 if (session.getCurrentState() != WorkSession.State.IDLE) sessions++;
             }
             
@@ -114,40 +121,44 @@ public class StatisticsViewer {
         }
         
         JTable weekTable = new JTable(weekModel);
-        weekTable.setRowHeight(25);
-        weekTable.getTableHeader().setReorderingAllowed(false);
-        weekTable.getColumnModel().getColumn(0).setPreferredWidth(100); // Day name column
-        weeklyPanel.add(new JScrollPane(weekTable));
+        weekTable.setRowHeight(35);
+        weekTable.setShowVerticalLines(false);
+        weekTable.setGridColor(new Color(233, 236, 239));
+        weekTable.setBackground(Color.WHITE);
+        weekTable.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
         
-        return weeklyPanel;
+        JTableHeader header = weekTable.getTableHeader();
+        header.setBackground(new Color(248, 249, 250));
+        header.setForeground(new Color(73, 80, 87));
+        header.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 14));
+        header.setBorder(BorderFactory.createLineBorder(new Color(233, 236, 239)));
+        header.setPreferredSize(new Dimension(header.getWidth(), 35));
+        
+        weekTable.getTableHeader().setReorderingAllowed(false);
+        weekTable.getColumnModel().getColumn(0).setPreferredWidth(120); // Day name column
+        
+        JScrollPane scrollPane = new JScrollPane(weekTable);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        scrollPane.getViewport().setBackground(Color.WHITE);
+        
+        return createStyledCard("This Week's Breakdown", scrollPane);
     }
     
     private JPanel createSummaryPanel(WorkSession session) {
-        JPanel summaryPanel = new JPanel(new GridLayout(4, 2, 10, 5));
-        summaryPanel.setBorder(BorderFactory.createTitledBorder("Summary"));
-        
         Map<String, Long> monthlyStats = dataManager.calculateMonthlyStats();
         long totalSessions = dataManager.countTotalSessions();
         
-        long weeklyWork = dataManager.calculateWeeklyWorkHours();
-        if (session.getCurrentState() == WorkSession.State.WORKING) {
-            long currentElapsed = session.getCurrentElapsedSeconds();
-            weeklyWork += session.getTotalWorkSeconds() + currentElapsed;
-        } else if (session.getCurrentState() != WorkSession.State.IDLE) {
-            weeklyWork += session.getTotalWorkSeconds();
-        }
-        
+        long weeklyWork = dataManager.calculateWeeklyWorkHours() + dataManager.getSessionActiveWorkSeconds(session);
         double avgDaily = weeklyWork / 7.0 / 3600.0; // Convert to hours
         
-        summaryPanel.add(new JLabel("This Month:"));
-        summaryPanel.add(new JLabel(TimeUtils.formatDuration(monthlyStats.get("current"))));
-        summaryPanel.add(new JLabel("Last Month:"));
-        summaryPanel.add(new JLabel(TimeUtils.formatDuration(monthlyStats.get("previous"))));
-        summaryPanel.add(new JLabel("Total Sessions:"));
-        summaryPanel.add(new JLabel(String.valueOf(totalSessions)));
-        summaryPanel.add(new JLabel("Avg Daily (This Week):"));
-        summaryPanel.add(new JLabel(String.format("%.1f hours", avgDaily)));
+        JPanel grid = new JPanel(new GridLayout(2, 4, 15, 10));
+        grid.setBackground(Color.WHITE);
         
-        return summaryPanel;
+        addStyledRow(grid, "This Month:", TimeUtils.formatDuration(monthlyStats.get("current")));
+        addStyledRow(grid, "Last Month:", TimeUtils.formatDuration(monthlyStats.get("previous")));
+        addStyledRow(grid, "Total Sessions:", String.valueOf(totalSessions));
+        addStyledRow(grid, "Avg Daily:", String.format("%.1f hrs", avgDaily));
+        
+        return createStyledCard("Summary", grid);
     }
 }

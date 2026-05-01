@@ -36,11 +36,11 @@ fi
 chmod 755 debian/DEBIAN/postinst debian/DEBIAN/prerm debian/usr/bin/worktracker
 
 # Build Debian package
-dpkg-deb --build debian worktracker_1.0.1_all.deb
+dpkg-deb --build debian worktracker_1.1.0_all.deb
 
 echo ""
 echo "Package created successfully!"
 echo "JAR: WorkHourTracker.jar"
-echo "DEB: worktracker_1.0.1_all.deb"
+echo "DEB: worktracker_1.1.0_all.deb"
 echo ""
-echo "Install: sudo dpkg -i worktracker_1.0.1_all.deb"
+echo "Install: sudo dpkg -i worktracker_1.1.0_all.deb"

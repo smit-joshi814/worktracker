@@ -1,2 +1,21 @@
-build
+# Compiled Java class files
+*.class
+
+# Build output directories and artifacts
+/build/
+*.jar
+*.deb
+
+# Generated Debian package assets
+debian/usr/share/worktracker/*.jar
+debian/usr/share/pixmaps/worktracker.png
+
+# Application data and state files
 work-log.csv
+.worktracker-state
+
+# IDE and OS specific configuration files
+.idea/
+.vscode/
+*.iml
+.DS_Store

@@ -83,4 +83,17 @@ public class SessionState {
     private static void deleteStateFile() {
         new File(STATE_FILE).delete();
     }
+    
+    public static void registerShutdownHook(WorkSession session, DataManager dataManager) {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            if (!new File(STATE_FILE).exists() && session.getCurrentState() != WorkSession.State.IDLE) {
+                session.stopWork();
+                try {
+                    dataManager.logSession(session);
+                } catch (Exception e) {
+                    System.err.println("Failed to save session during shutdown: " + e.getMessage());
+                }
+            }
+        }));
+    }
 }
